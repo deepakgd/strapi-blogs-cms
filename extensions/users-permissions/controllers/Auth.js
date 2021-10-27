@@ -128,7 +128,7 @@ module.exports = {
           })
         );
       } else {
-         // get token
+        // get token
         const jwtToken = strapi.plugins['users-permissions'].services.jwt.issue({
           id: user.id,
         });
@@ -140,9 +140,6 @@ module.exports = {
 
         ctx.send({
           status: 'Authenticated',
-          jwt: strapi.plugins['users-permissions'].services.jwt.issue({
-            id: user.id,
-          }),
           user: sanitizeEntity(user.toJSON ? user.toJSON() : user, {
             model: strapi.query('user', 'users-permissions').model,
           }),
@@ -175,10 +172,18 @@ module.exports = {
         return ctx.badRequest(null, error === 'array' ? error[0] : error);
       }
 
+      // get token
+      const jwtToken = strapi.plugins['users-permissions'].services.jwt.issue({
+        id: user.id,
+      });
+
+      ctx.cookies.set("token", jwtToken, {
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days,
+      });
+
       ctx.send({
-        jwt: strapi.plugins['users-permissions'].services.jwt.issue({
-          id: user.id,
-        }),
+        status: 'Authenticated',
         user: sanitizeEntity(user.toJSON ? user.toJSON() : user, {
           model: strapi.query('user', 'users-permissions').model,
         }),
@@ -530,7 +535,7 @@ module.exports = {
       const jwt = strapi.plugins['users-permissions'].services.jwt.issue(_.pick(user, ['id']));
 
       return ctx.send({
-        jwt,
+        // jwt,
         user: sanitizedUser,
       });
     } catch (err) {
